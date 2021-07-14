@@ -29,11 +29,42 @@ function ProfileSidebar(props) {
   );
 }
 
+function ProfileRelationsBox(props) {
+  return (
+    <ProfileRelationsBoxWrapper>
+      <h2 className="smallTitle">
+        {props.title} ({props.items.length})
+      </h2>
+      <ul>
+        {props.items.slice(0,6).map((itemAtual) => {
+          return (
+            <li key={itemAtual.id}>
+              <a href={itemAtual.link}>
+                <img src={itemAtual.image} />
+                <span>{itemAtual.title}</span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </ProfileRelationsBoxWrapper>
+  );
+}
+
+function mapPessoaToObject(pessoa){
+  return {
+    id: `id_${pessoa}`,
+    title: pessoa,
+    image: `https://github.com/${pessoa}.png`,
+    link: `https://github.com/${pessoa}`,
+  };
+}
+
 export default function Home() {
   const githubUser = "castrors";
   const [comunidades, setComunidades] = React.useState([
     {
-      id: '234234234234',
+      id: "234234234234",
       title: "Eu odeio acordar cedo",
       image: "https://alurakut.vercel.app/capa-comunidade-01.jpg",
     },
@@ -46,9 +77,22 @@ export default function Home() {
     "rafaeltoledo",
     "alvarowolfx",
   ];
+
+  const [seguidores, setSeguidores] = React.useState([]);
+
+  React.useEffect(function () {
+    fetch("https://api.github.com/users/castrors/followers")
+      .then(function (respostaDoServidor) {
+        return respostaDoServidor.json();
+      })
+      .then(function (respostaCompleta) {
+        setSeguidores(respostaCompleta);
+      });
+  }, []);
+
   return (
     <>
-      <AlurakutMenu githubUser={githubUser}/>
+      <AlurakutMenu githubUser={githubUser} />
       <MainGrid>
         <div className="profileArea" style={{ gridArea: "profileArea" }}>
           <ProfileSidebar githubUser={githubUser} />
@@ -100,42 +144,14 @@ export default function Home() {
           className="profileRelationsArea"
           style={{ gridArea: "profileRelationsArea" }}
         >
-          <ProfileRelationsBoxWrapper>
-            <h2 className="smallTitle">
-              Pessoas da comunidade ({pessoasFavoritas.length})
-            </h2>
-            <ul>
-              {pessoasFavoritas.map((itemAtual) => {
-                return (
-                  <li key={itemAtual}>
-                    <a href={`/users/${itemAtual}`}>
-                      <img src={`https://github.com/${itemAtual}.png`} />
-                      <span>{itemAtual}</span>
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </ProfileRelationsBoxWrapper>
+          <ProfileRelationsBox title="Seguidores" items={seguidores.map((pessoa) =>mapPessoaToObject(pessoa.login))} />
 
-          <ProfileRelationsBoxWrapper>
+          <ProfileRelationsBox title="Comunidades" items={comunidades} />
 
-          <h2 className="smallTitle">
-              Comunidades({pessoasFavoritas.length})
-            </h2>
-            <ul>
-              {comunidades.map((itemAtual) => {
-                return (
-                  <li key={itemAtual.id}>
-                    <a href={`/users/${itemAtual.title}`}>
-                      <img src={itemAtual.image} />
-                      <span>{itemAtual.title}</span>
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </ProfileRelationsBoxWrapper>
+          <ProfileRelationsBox
+            title="Pessoas da Comunidade"
+            items={pessoasFavoritas.map(mapPessoaToObject)}
+          />
         </div>
       </MainGrid>
     </>
